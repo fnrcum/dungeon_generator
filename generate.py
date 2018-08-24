@@ -1,8 +1,16 @@
 import random
 from helpers import Leaf
-from colors import RGBCOLORS
-from PIL import Image
-import numpy
+from renderer import MapRenderer
+
+
+class RoomList:
+    rooms = []
+
+    def add_room(self, room):
+        self.rooms.append(room)
+
+    def get_rooms(self):
+        return self.rooms
 
 
 class BSPTree:
@@ -14,7 +22,7 @@ class BSPTree:
         self.ROOM_MAX_SIZE = 20
         self.ROOM_MIN_SIZE = 6
 
-    def generateLevel(self, map_width, map_height):
+    def generateLevel(self, map_width, map_height, room_list):
         # Creates an empty 2D array or clears existing array
         self.level = [["#"
                        for y in range(map_height)]
@@ -37,7 +45,7 @@ class BSPTree:
                             self._leafs.append(l.child_2)
                             split_successfully = True
 
-        rootLeaf.createRooms(self)
+        rootLeaf.createRooms(self, room_list)
 
         return self.level
 
@@ -49,19 +57,11 @@ class BSPTree:
 
     def createHall(self, room1, room2):
         # connect two rooms by hallways
-        if random.randint(0, 1) == 1:
-            x1, y1 = room1.get_wall()
-        else:
-            x1, y1 = room1.center()
+        x1, y1 = room1.get_wall()
+        x2, y2 = room2.get_wall()
 
-        if random.randint(0, 1) == 1:
-            x2, y2 = room2.center()
-        else:
-            x2, y2 = room2.get_wall()
-        # coords = room1.get_wall("west")
         # 50% chance that a tunnel will start horizontally
         if random.randint(0, 1) == 1:
-        # if coord1 == "horr":
             self.createHorTunnel(x1, x2, y1)
             self.createVirTunnel(y1, y2, x2)
 
@@ -84,31 +84,9 @@ class BSPTree:
             # self.level[_x][y] = "c"
 
 
-newtree = []
-tree = BSPTree().generateLevel(64, 128)
-for leaf in tree:
-    newtree.append([str(i) for i in leaf])
+room_list = RoomList()
+tree = BSPTree().generateLevel(64, 128, room_list)
 
-img_map = []
-for leaf in tree:
-    img_leaf = []
-    for item in leaf:
-        if item == "#":
-            img_leaf.append(RGBCOLORS.wall)
-        elif item == "c":
-            img_leaf.append(RGBCOLORS.corridor)
-        else:
-            img_leaf.append(RGBCOLORS.floor)
-    img_map.append(img_leaf)
+MapRenderer(tree).render_map()
+print(room_list.get_rooms()[5].get_random_point_in_room())
 
-# for leaf in img_map:
-#     print(leaf)
-# with open("map.txt", "w+") as f:
-#     for leaf in newtree:
-#         for item in leaf:
-#             f.write(item)
-#         f.write("\n")
-
-array = numpy.array(img_map, dtype=numpy.uint8)
-img = Image.fromarray(array)
-img.save('map.png')

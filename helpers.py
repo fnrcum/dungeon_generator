@@ -1,7 +1,14 @@
 import random
 
 
-class Rect:  # used for the tunneling algorithm
+class Rect:
+    """
+    Class that represents a rectangular room
+    :x coordinate
+    :y coordinate
+    :w width
+    :h height
+    """
     def __init__(self, x, y, w, h):
         self.x1 = x
         self.y1 = y
@@ -29,17 +36,16 @@ class Rect:  # used for the tunneling algorithm
         return center_x, center_y
 
     def get_wall(self):
-
         chance = random.random()
         if chance < 0.25:
             wall = self[:, 0]
             wall = random.choice(wall)
             wall_x, wall_y = wall[0], wall[1]
-        elif chance > 0.25 and chance < 0.5:
+        elif 0.25 < chance < 0.5:
             wall = self[:, -1]
             wall = random.choice(wall)
             wall_x, wall_y = wall[0], wall[1]
-        elif chance > 0.5 and chance < 0.75:
+        elif 0.5 < chance < 0.75:
             wall = self[0, :]
             wall = random.choice(wall)
             wall_x, wall_y = wall[0], wall[1]
@@ -50,19 +56,35 @@ class Rect:  # used for the tunneling algorithm
 
         return wall_x, wall_y
 
+    def get_all_points_inside_room(self):
+        point_coordinates = []
+        for i in range(self.y1 - 1):
+            coords = self[i, :]
+            coords.pop(0)
+            coords.pop(len(coords) - 1)
+            point_coordinates.append(coords)
+        return point_coordinates
+
+    def get_random_point_in_room(self):
+        point_coordinates = self.get_all_points_inside_room()
+        print(point_coordinates)
+        choice = random.choice(point_coordinates)
+        print(choice)
+        return random.choice(choice)
+
     def intersect(self, other):
         # returns true if this rectangle intersects with another one
         return (self.x1 <= other.x2 and self.x2 >= other.x1 and
                 self.y1 <= other.y2 and self.y2 >= other.y1)
 
 
-class Leaf:  # used for the BSP tree algorithm
+class Leaf:
     def __init__(self, x, y, width, height):
         self.x = x
         self.y = y
         self.width = width
         self.height = height
-        self.MIN_LEAF_SIZE = 10
+        self.MIN_LEAF_SIZE = 9
         self.child_1 = None
         self.child_2 = None
         self.room = None
@@ -106,13 +128,13 @@ class Leaf:  # used for the BSP tree algorithm
 
         return True
 
-    def createRooms(self, bspTree):
+    def createRooms(self, bspTree, room_list):
         if self.child_1 or self.child_2:
             # recursively search for children until you hit the end of the branch
             if self.child_1:
-                self.child_1.createRooms(bspTree)
+                self.child_1.createRooms(bspTree, room_list)
             if self.child_2:
-                self.child_2.createRooms(bspTree)
+                self.child_2.createRooms(bspTree, room_list)
 
             if self.child_1 and self.child_2:
                 bspTree.createHall(self.child_1.getRoom(),
@@ -125,6 +147,7 @@ class Leaf:  # used for the BSP tree algorithm
             x = random.randint(self.x, self.x + (self.width - 1) - w)
             y = random.randint(self.y, self.y + (self.height - 1) - h)
             self.room = Rect(x, y, w, h)
+            room_list.add_room(self.room)
             bspTree.createRoom(self.room)
 
     def getRoom(self):
