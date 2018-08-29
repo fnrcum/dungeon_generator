@@ -1,28 +1,19 @@
 import random
-from helpers import Leaf
+from helpers import Leaf, Rect, RoomList
 from renderer import MapRenderer
-
-
-class RoomList:
-    rooms = []
-
-    def add_room(self, room):
-        self.rooms.append(room)
-
-    def get_rooms(self):
-        return self.rooms
+from typing import List, Any
 
 
 class BSPTree:
     def __init__(self):
-        self.level = []
-        self.room = None
-        self._leafs = []
-        self.MAX_LEAF_SIZE = 32
-        self.ROOM_MAX_SIZE = 20
-        self.ROOM_MIN_SIZE = 6
+        self.level: List = []
+        self.room: object = None
+        self._leafs: List = []
+        self.MAX_LEAF_SIZE: int = 32
+        self.ROOM_MAX_SIZE: int = 20
+        self.ROOM_MIN_SIZE: int = 6
 
-    def generateLevel(self, map_width, map_height, room_list):
+    def generateLevel(self, map_width: int, map_height: int, room_list: RoomList):
         # Creates an empty 2D array or clears existing array
         self.level = [["#"
                        for y in range(map_height)]
@@ -49,13 +40,13 @@ class BSPTree:
 
         return self.level
 
-    def createRoom(self, room):
+    def createRoom(self, room: Rect):
         # set all tiles within a rectangle to 0
         for x in range(room.x1 + 1, room.x2):
             for y in range(room.y1 + 1, room.y2):
                 self.level[x][y] = " "
 
-    def createHall(self, room1, room2):
+    def createHall(self, room1: Rect, room2: Rect):
         # connect two rooms by hallways
         x1, y1 = room1.get_wall()
         x2, y2 = room2.get_wall()
@@ -69,14 +60,14 @@ class BSPTree:
             self.createVirTunnel(y1, y2, x1)
             self.createHorTunnel(x1, x2, y2)
 
-    def createHorTunnel(self, x1, x2, y):
+    def createHorTunnel(self, x1: int, x2: int, y: int):
         _x1, _x2, _y = int(x1), int(x2), int(y)
         for x in range(min(_x1, _x2), max(_x1, _x2) + 1):
             if self.level[x][_y] is not " ":
                 self.level[x][_y] = "c"
             # self.level[x][_y] = "c"
 
-    def createVirTunnel(self, y1, y2, x):
+    def createVirTunnel(self, y1: int, y2: int, x: int):
         _y1, _y2, _x = int(y1), int(y2), int(x)
         for y in range(min(_y1, _y2), max(_y1, _y2) + 1):
             if self.level[_x][y] is not " ":

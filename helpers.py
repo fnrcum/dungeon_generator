@@ -1,4 +1,15 @@
 import random
+from typing import List, Tuple, Any, Optional
+
+
+class RoomList:
+    rooms: List = []
+
+    def add_room(self, room):
+        self.rooms.append(room)
+
+    def get_rooms(self) -> List:
+        return self.rooms
 
 
 class Rect:
@@ -9,13 +20,13 @@ class Rect:
     :w width
     :h height
     """
-    def __init__(self, x, y, w, h):
+    def __init__(self, x: int, y: int, w: int, h: int):
         self.x1 = x
         self.y1 = y
         self.x2 = x + w - 1
         self.y2 = y + h - 1
 
-    def __getitem__(self, k):
+    def __getitem__(self, k: int):
         def iteritem(k, kmin, kmax):
             if isinstance(k, int):
                 yield kmin + k if k >= 0 else kmax + k
@@ -30,12 +41,12 @@ class Rect:
                     result.append((i, j))
             return result
 
-    def center(self):
+    def center(self) -> Tuple:
         center_x = (self.x1 + self.x2) // 2
         center_y = (self.y1 + self.y2) // 2
         return center_x, center_y
 
-    def get_wall(self):
+    def get_wall(self) -> Tuple:
         chance = random.random()
         if chance < 0.25:
             wall = self[:, 0]
@@ -56,8 +67,8 @@ class Rect:
 
         return wall_x, wall_y
 
-    def get_all_points_inside_room(self):
-        point_coordinates = []
+    def get_all_points_inside_room(self) -> List:
+        point_coordinates: List = []
         for i in range(self.y1 - 1):
             coords = self[i, :]
             coords.pop(0)
@@ -65,29 +76,29 @@ class Rect:
             point_coordinates.append(coords)
         return point_coordinates
 
-    def get_random_point_in_room(self):
+    def get_random_point_in_room(self) -> Tuple:
         point_coordinates = self.get_all_points_inside_room()
         print(point_coordinates)
         choice = random.choice(point_coordinates)
         print(choice)
         return random.choice(choice)
 
-    def intersect(self, other):
+    def intersect(self, other) -> bool:
         # returns true if this rectangle intersects with another one
         return (self.x1 <= other.x2 and self.x2 >= other.x1 and
                 self.y1 <= other.y2 and self.y2 >= other.y1)
 
 
 class Leaf:
-    def __init__(self, x, y, width, height):
+    def __init__(self, x: int, y: int, width: int, height: int):
         self.x = x
         self.y = y
         self.width = width
         self.height = height
-        self.MIN_LEAF_SIZE = 9
-        self.child_1 = None
-        self.child_2 = None
-        self.room = None
+        self.MIN_LEAF_SIZE: int = 9
+        self.child_1: Leaf = None
+        self.child_2: Leaf = None
+        self.room: Rect = None
         self.hall = None
 
     def split_leaf(self):
@@ -128,7 +139,7 @@ class Leaf:
 
         return True
 
-    def createRooms(self, bspTree, room_list):
+    def createRooms(self, bspTree, room_list: RoomList):
         if self.child_1 or self.child_2:
             # recursively search for children until you hit the end of the branch
             if self.child_1:
@@ -150,7 +161,7 @@ class Leaf:
             room_list.add_room(self.room)
             bspTree.createRoom(self.room)
 
-    def getRoom(self):
+    def getRoom(self) -> Optional[Rect]:
         if self.room:
             return self.room
         else:
